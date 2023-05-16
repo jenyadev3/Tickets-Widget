@@ -18,40 +18,60 @@
     root.render(<App tickets={tickets} />);
 
     function App({tickets}) {
+      // Переключение вкладок
+      const [activePage, setActivePage] = React.useState("calendar");
+      const [selectedDate, setSelectedDate] = React.useState(null);
       const [selectedDateTickets] = tickets;
+
+      const getContent = (page) => {
+      switch (page) {
+      case "calendar":
+      return (
+        <Calendar
+          tickets={tickets}
+          // сохраняется при переходе с вкладки на вкладку выбранная в таблице цен дата (коллбэк для подъема состояния)
+          onSelectDate={setSelectedDate} 
+          selectedDate={selectedDate}
+        />
+      );
+      case "tariff":
+      return (
+        <Tariff
+          selected={selectedDateTickets}
+        />
+       );
+      default:
+      return null;
+       }
+      };
 
       return (
         <Wrapper>
           <ul className="tabs">
             <li className="tab">
               <button
-                className="tab-button"
+              onClick={() => setActivePage("calendar")}
+                className={`tab-button ${activePage === "calendar" ? "tab-button-active" : ""}`}
                 type="button">
                 Таблица цен
               </button>
             </li>
             <li className="tab">
               <button
-                className="tab-button tab-button-active"
+              onClick={() => setActivePage("tariff")}
+                  className={`tab-button ${activePage === "tariff" ? "tab-button-active" : ""}`}
                 type="button">
                 Сравнение билетов
               </button>
             </li>
           </ul>
-          <Calendar
-            tickets={tickets}
-          />
-          <Tariff
-            selected={selectedDateTickets} // Информация о дате вылета и стоимости билета для эконом-класса и бизнес-класса передаётся в компонент через параметр selected
-          />
+          {getContent(activePage)}
         </Wrapper>
       )
     }
 
     // Таблица цен
-    function Calendar({tickets}) {
-      // Состояние при выборе билета
-      const [selectedDate, setSelectedDate] = React.useState(null);
+    function Calendar({tickets, selectedDate, onSelectDate}) {
       const sortedTickets = [...tickets]
         .sort((a, b) => {
           return a.date > b.date ? 1 : -1;
@@ -108,9 +128,8 @@
               {shownTickets.map(({ economy, date }) => (
                 <td
                   key={date}
-                  onClick={() => setSelectedDate(date)}
-                  className={date === selectedDate && "active"} // добавляется класс при нажатии на ячейку
-                >
+                  // Добавляется класс при нажатии на ячейку
+                  onClick={() => onSelectDate(date)} className={date === selectedDate && "active"}>
                   {formatPrice(economy)}
                 </td>
               ))}
