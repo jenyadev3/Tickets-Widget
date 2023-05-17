@@ -17,9 +17,14 @@
     const root = ReactDOM.createRoot(container);
     root.render(<App tickets={tickets} />);
 
+    const AppRoute = {
+      Calendar: "calendar",
+      Tariff: "tariff"
+    };
+
     function App({tickets}) {
       // Переключение вкладок
-      const [activePage, setActivePage] = React.useState("calendar");
+      const [activePage, setActivePage] = React.useState(AppRoute.Calendar);
       const [selectedDate, setSelectedDate] = React.useState(null);
       const [selectedTariff, setSelectedTariff] = React.useState("economy");
       // Параметр selectedDateTickets, который содержит описание билетов за выбранную дату. 
@@ -86,8 +91,12 @@
         });
       const DAYS_SHOWN = 5;
       const maxShift = tickets.length - DAYS_SHOWN;
+      const getInitialShift = () => {
+      const selectedIndex = sortedTickets.findIndex(({ date }) => date === selectedDate);
+      return Math.max(selectedIndex + 1 - DAYS_SHOWN, 0);
+       };
       // Сдвиг календаря
-      const [shift, setShift] = React.useState(0);
+      const [shift, setShift] = React.useState(getInitialShift);
       // Цена билета price в зависимости от выбранного тарифа
       const shownTickets = sortedTickets
         .slice(shift, shift + DAYS_SHOWN).map((item => ({...item, price: item[tariff]})));
@@ -150,9 +159,7 @@
 
     // Сравнение билетов
 
-    function Tariff({ selected }) {
-      const [selectedTariff, setSelectedTariff] = React.useState("economy");
-
+    function Tariff({ selected, selectedTariff, onSelectTariff }) {
       const formatPrice = (price) => `${price.toLocaleString()} ₽`;
       const formatDate = (date) =>
         new Date(date).toLocaleDateString("ru", {
@@ -163,7 +170,7 @@
 
       return (
         <ul className="ticket-list">
-          <li onClick={() => setSelectedTariff("economy")} className="ticket-list-item">
+          <li onClick={() => onSelectTariff("economy")} className="ticket-list-item">
             <article className={`ticket ${selectedTariff === "economy" ? "active" : ""}`}>
               <div className="ticket-short">
                 <div className="ticket-class">Эконом</div>
@@ -199,7 +206,7 @@
               </div>
             </article>
           </li>
-          <li  onClick={() => setSelectedTariff("business")} className="ticket-list-item">
+          <li  onClick={() => onSelectTariff("business")} className="ticket-list-item">
             <article className={`ticket ${selectedTariff === "business" ? "active" : ""}`}>
               <div className="ticket-short">
                 <div className="ticket-class">Бизнес</div>
