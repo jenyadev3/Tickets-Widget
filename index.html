@@ -21,24 +21,31 @@
       // Переключение вкладок
       const [activePage, setActivePage] = React.useState("calendar");
       const [selectedDate, setSelectedDate] = React.useState(null);
-      const [selectedDateTickets] = tickets;
+      const [selectedTariff, setSelectedTariff] = React.useState("economy");
+      // Параметр selectedDateTickets, который содержит описание билетов за выбранную дату. 
+      // find() используется для поиска первого элемента в массиве, который удовлетворяет заданному условию в виде колбэк-функции. 
+      // Объект в массиве tickets ищется по полю date. Значение этого поля сравнивается со значением текущего состояния selectedDate.
+      const selectedDateTickets = tickets.find(({ date }) => date === selectedDate);
 
-      const getContent = (page) => {
-      switch (page) {
+      const getContent = (activePage) => {
+      switch (activePage) {
       case "calendar":
       return (
         <Calendar
           tickets={tickets}
-          // сохраняется при переходе с вкладки на вкладку выбранная в таблице цен дата (коллбэк для подъема состояния)
+          tariff={selectedTariff}
+          // Сохраняется при переходе с вкладки на вкладку выбранная в таблице цен дата (коллбэк для подъема состояния)
           onSelectDate={setSelectedDate} 
           selectedDate={selectedDate}
         />
       );
       case "tariff":
       return (
+        // Первое свойство передаёт в компонент текущий выбранный тариф, а второй — обновляет это значение при выборе другого тарифа.
         <Tariff
-          selected={selectedDateTickets}
-        />
+                selected={selectedDateTickets}
+                selectedTariff={selectedTariff} onSelectTariff={setSelectedTariff}
+              />
        );
       default:
       return null;
@@ -60,6 +67,7 @@
               <button
               onClick={() => setActivePage("tariff")}
                   className={`tab-button ${activePage === "tariff" ? "tab-button-active" : ""}`}
+                  disabled={!selectedDateTickets}
                 type="button">
                 Сравнение билетов
               </button>
@@ -71,7 +79,7 @@
     }
 
     // Таблица цен
-    function Calendar({tickets, selectedDate, onSelectDate}) {
+    function Calendar({tickets, selectedDate, onSelectDate, tariff = "economy" }) {
       const sortedTickets = [...tickets]
         .sort((a, b) => {
           return a.date > b.date ? 1 : -1;
@@ -80,8 +88,9 @@
       const maxShift = tickets.length - DAYS_SHOWN;
       // Сдвиг календаря
       const [shift, setShift] = React.useState(0);
+      // Цена билета price в зависимости от выбранного тарифа
       const shownTickets = sortedTickets
-        .slice(shift, shift + DAYS_SHOWN);
+        .slice(shift, shift + DAYS_SHOWN).map((item => ({...item, price: item[tariff]})));
 
       const formatDate = (date) =>
         new Date(date).toLocaleDateString("ru", {
@@ -238,7 +247,7 @@
           <header className="main-header">
             <div className="main-header-content container">
               <a className="logo" href="#">
-                <img src="img/logo.svg" width="110" height="35" alt="ChipTrip"/>
+                <img src="img/plane.svg" width="110" height="35" alt="Logo"/>
               </a>
               <a className="profile" href="#">Профиль</a>
             </div>
